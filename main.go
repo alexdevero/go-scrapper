@@ -2,12 +2,27 @@ package main
 
 import (
 	"log"
+	"os"
+	"strconv"
 	"golang.org/x/sync/errgroup"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	envErr := godotenv.Load()
+	if envErr != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	maxRetries, maxRetriesErr := strconv.Atoi(os.Getenv("MAX_RETRIES"))
+	if maxRetriesErr != nil {
+		log.Fatal("Error converting MAX_RETRIES to int")
+	}
+	itemSelector := os.Getenv("LISTING_ITEM_LINK_SELECTOR")
+	filePath := os.Getenv("FILE_PATH")
+
 	urls := []string{
-		"https://www.firmy.cz/?q=%C3%BA%C4%8Detn%C3%AD+firmy",
+		os.Getenv("LISTING_URL"),
 	}
 
 	var g errgroup.Group
@@ -16,7 +31,7 @@ func main() {
 	for _, url := range urls {
 		url := url // Create a new variable to avoid a data race
 		g.Go(func() error {
-			return scrape(url)
+			return scrape(url, maxRetries, itemSelector, filePath)
 		})
 	}
 

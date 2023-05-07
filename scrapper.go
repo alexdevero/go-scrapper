@@ -14,10 +14,10 @@ type LinkInfo struct {
 
 const maxRetries = 5
 
-func scrape(url string) error {
+func scrape(url string, maxRetries int, selector string, filePath string) error {
 	var err error
 	for i := 0; i < maxRetries; i++ {
-		err = fetchAndExtract(url)
+		err = fetchAndExtract(url, selector, filePath)
 		if err == nil {
 			break
 		}
@@ -26,7 +26,7 @@ func scrape(url string) error {
 	return err
 }
 
-func fetchAndExtract(url string) error {
+func fetchAndExtract(url string, selector string, filePath string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("error fetching URL %s: %w", url, err)
@@ -45,7 +45,7 @@ func fetchAndExtract(url string) error {
 	links := []LinkInfo{}
 
 	fmt.Printf("Links for URL %s:\n", url)
-	doc.Find(".premiseList h3 a").Each(func(i int, s *goquery.Selection) {
+	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 		href, exists := s.Attr("href")
 		if exists {
 			title := s.Text()
@@ -60,7 +60,7 @@ func fetchAndExtract(url string) error {
 	})
 
 	// fmt.Println(links)
-	saveDataToFile(links, "links.txt")
+	saveDataToFile(links, filePath)
 
 	return nil
 }
